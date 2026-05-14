@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="COMPLETE">
+  <meta name="theme-color" content="#0e0e0e">
+  <title>COMPLETE</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:#0e0e0e; --s1:#161616; --s2:#1e1e1e; --bd:#272727;
+      --y:#A78BFA; --yd:rgba(167,139,250,.13);
+      --tx:#dedede; --mu:#4a4a4a;
+      --gr:#5cdb7d;
+      --mono:'Space Mono','Courier New',monospace;
+      --head:'Syne',sans-serif;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+    body{background:var(--bg);color:var(--tx);font-family:var(--mono);font-size:14px;min-height:100dvh;overscroll-behavior:none}
+
+    /* ── Layout ── */
+    .wrap{padding:env(safe-area-inset-top) 0 calc(32px + env(safe-area-inset-bottom))}
+    .top{padding:28px 18px 0}
+    .date{font:700 10px/1 var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--mu);margin-bottom:10px}
+    .logo{font:800 48px/1 var(--head);letter-spacing:-.02em;margin-bottom:32px}
+    .logo em{color:var(--y);font-style:normal}
+
+    /* ── Section ── */
+    .section{padding:0 18px;margin-bottom:28px}
+    .sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
+    .sec-title{font:800 12px/1 var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--tx)}
+    .sec-progress{font:400 10px/1 var(--mono);color:var(--mu);letter-spacing:.06em}
+    .sec-progress em{color:var(--y);font-style:normal}
+    .sec-progress.done em{color:var(--gr)}
+
+    /* ── Items ── */
+    .item{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--bd);cursor:pointer;user-select:none}
+    .item:last-child{border-bottom:none}
+    .item:active .item-box{background:var(--yd)}
+    .item-box{width:20px;height:20px;border-radius:4px;border:1.5px solid var(--bd);flex-shrink:0;
+              display:flex;align-items:center;justify-content:center;transition:all .15s}
+    .item.checked .item-box{background:var(--y);border-color:var(--y)}
+    .item-check{width:10px;height:10px;opacity:0;transition:opacity .1s}
+    .item.checked .item-check{opacity:1}
+    .item-label{font:400 14px/1 var(--mono);color:var(--mu);letter-spacing:.04em;transition:color .15s}
+    .item.checked .item-label{color:var(--tx)}
+
+    /* ── Progress bar ── */
+    .progress-bar{height:2px;background:var(--bd);border-radius:1px;margin-bottom:8px;overflow:hidden}
+    .progress-fill{height:100%;background:var(--y);border-radius:1px;transition:width .25s ease}
+    .all-done .progress-fill{background:var(--gr)}
+
+    /* ── Reset ── */
+    .reset-btn{display:block;margin:0 18px;width:calc(100% - 36px);background:transparent;
+               border:1px solid var(--bd);border-radius:3px;color:var(--mu);
+               font:400 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
+               padding:12px;cursor:pointer;transition:all .12s;text-align:center}
+    .reset-btn:active{background:var(--s2);color:var(--tx)}
+
+    /* ── All done banner ── */
+    .done-banner{margin:0 18px 24px;padding:14px;background:rgba(92,219,125,.07);
+                 border:1px solid rgba(92,219,125,.2);border-radius:4px;
+                 font:400 11px/1.6 var(--mono);color:var(--gr);letter-spacing:.06em;text-align:center;
+                 display:none}
+    .done-banner.show{display:block}
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top">
+    <div class="date" id="date-label">—</div>
+    <div class="logo">COMPLETE<em>.</em></div>
+  </div>
+
+  <div class="section" id="sec-morning">
+    <div class="sec-header">
+      <span class="sec-title">morning</span>
+      <span class="sec-progress" id="prog-morning">0 / 7</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="bar-morning" style="width:0%"></div></div>
+    <div id="list-morning"></div>
+  </div>
+
+  <div class="section" id="sec-evening">
+    <div class="sec-header">
+      <span class="sec-title">evening</span>
+      <span class="sec-progress" id="prog-evening">0 / 5</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="bar-evening" style="width:0%"></div></div>
+    <div id="list-evening"></div>
+  </div>
+
+  <div class="done-banner" id="done-banner">all done for today ✓</div>
+  <button class="reset-btn" onclick="resetDay()">reset today</button>
+</div>
+
+<script>
+const ROUTINES = {
+  morning: ['coffee','meds','walk','breakfast','shower','face','journal entry'],
+  evening: ['log','prep clothes','prep breakfast','prep coffee','plan'],
+};
+
+const TODAY = new Date().toISOString().split('T')[0];
+const SK = 'complete_' + TODAY;
+
+let state = {};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(SK);
+    if (raw) { state = JSON.parse(raw); return; }
+  } catch {}
+  // Fresh day — also clear old keys
+  Object.keys(localStorage).filter(k => k.startsWith('complete_') && k !== SK)
+    .forEach(k => localStorage.removeItem(k));
+  state = { morning: {}, evening: {} };
+}
+
+function saveState() { localStorage.setItem(SK, JSON.stringify(state)); }
+
+function toggle(section, item) {
+  state[section][item] = !state[section][item];
+  saveState();
+  render();
+}
+
+function render() {
+  document.getElementById('date-label').textContent =
+    new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).toUpperCase();
+
+  let totalDone = 0, totalAll = 0;
+
+  Object.entries(ROUTINES).forEach(([section, items]) => {
+    const list = document.getElementById('list-' + section);
+    const prog = document.getElementById('prog-' + section);
+    const bar  = document.getElementById('bar-' + section);
+    const sec  = document.getElementById('sec-' + section);
+
+    const done = items.filter(i => state[section]?.[i]).length;
+    const pct  = Math.round((done / items.length) * 100);
+    totalDone += done; totalAll += items.length;
+
+    bar.style.width = pct + '%';
+    prog.innerHTML = `<em>${done}</em> / ${items.length}`;
+    prog.className = 'sec-progress' + (done === items.length ? ' done' : '');
+    if (done === items.length) bar.parentElement.classList.add('all-done');
+    else bar.parentElement.classList.remove('all-done');
+
+    list.innerHTML = items.map(item => `
+      <div class="item${state[section]?.[item] ? ' checked' : ''}" onclick="toggle('${section}','${item}')">
+        <div class="item-box">
+          <svg class="item-check" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1.5 5L4 7.5L8.5 2.5" stroke="#0e0e0e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="item-label">${item}</span>
+      </div>`).join('');
+  });
+
+  document.getElementById('done-banner').classList.toggle('show', totalDone === totalAll);
+}
+
+function resetDay() {
+  if (!confirm('Reset all items?')) return;
+  state = { morning: {}, evening: {} };
+  saveState(); render();
+}
+
+loadState();
+render();
+</script>
+</body>
+</html>
