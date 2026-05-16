@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="COMPLETE">
+  <meta name="apple-mobile-web-app-title" content="DO">
   <meta name="theme-color" content="#0e0e0e">
-  <title>COMPLETE</title>
+  <title>DO</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
@@ -15,163 +15,265 @@
       --bg:#0e0e0e; --s1:#161616; --s2:#1e1e1e; --bd:#272727;
       --y:#A78BFA; --yd:rgba(167,139,250,.13);
       --tx:#dedede; --mu:#4a4a4a;
-      --gr:#5cdb7d;
+      --gr:#5cdb7d; --re:#e06060;
       --mono:'Space Mono','Courier New',monospace;
       --head:'Syne',sans-serif;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-    body{background:var(--bg);color:var(--tx);font-family:var(--mono);font-size:14px;min-height:100dvh;overscroll-behavior:none}
+    html{height:100%}
+    body{background:var(--bg);color:var(--tx);font-family:var(--mono);font-size:14px;
+         height:100%;overscroll-behavior:none}
 
-    /* ── Layout ── */
-    .wrap{padding:env(safe-area-inset-top) 0 calc(32px + env(safe-area-inset-bottom))}
-    .top{padding:28px 18px 0}
-    .date{font:700 10px/1 var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--mu);margin-bottom:10px}
-    .logo{font:800 48px/1 var(--head);letter-spacing:-.02em;margin-bottom:32px}
-    .logo em{color:var(--y);font-style:normal}
+    /* ── Screens ── */
+    .scr{display:none;height:100dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;
+         padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+    .scr.on{display:block}
+    #s-home{padding-top:env(safe-area-inset-top)}
 
-    /* ── Section ── */
-    .section{padding:0 18px;margin-bottom:28px}
-    .sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
-    .sec-title{font:800 12px/1 var(--head);letter-spacing:.12em;text-transform:uppercase;color:var(--tx)}
-    .sec-progress{font:400 10px/1 var(--mono);color:var(--mu);letter-spacing:.06em}
-    .sec-progress em{color:var(--y);font-style:normal}
-    .sec-progress.done em{color:var(--gr)}
+    /* ── Sticky sub-screen header ── */
+    .hd{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--bd);
+        padding:calc(14px + env(safe-area-inset-top)) 18px 14px;
+        display:flex;align-items:center;gap:14px;z-index:10}
+    .hd-back{background:none;border:none;color:var(--y);font:400 12px/1 var(--mono);cursor:pointer;letter-spacing:.06em;padding:4px 0}
+    .hd-title{font:800 15px/1 var(--head);letter-spacing:.1em;text-transform:uppercase;flex:1}
+    .hd-action{background:none;border:none;color:var(--mu);font:400 11px/1 var(--mono);cursor:pointer;letter-spacing:.06em;padding:4px 0;transition:color .12s}
+    .hd-action:active{color:var(--y)}
 
-    /* ── Items ── */
-    .item{display:flex;align-items:center;gap:14px;padding:13px 0;border-bottom:1px solid var(--bd);cursor:pointer;user-select:none}
-    .item:last-child{border-bottom:none}
-    .item:active .item-box{background:var(--yd)}
-    .item-box{width:20px;height:20px;border-radius:4px;border:1.5px solid var(--bd);flex-shrink:0;
-              display:flex;align-items:center;justify-content:center;transition:all .15s}
-    .item.checked .item-box{background:var(--y);border-color:var(--y)}
-    .item-check{width:10px;height:10px;opacity:0;transition:opacity .1s}
-    .item.checked .item-check{opacity:1}
-    .item-label{font:400 14px/1 var(--mono);color:var(--mu);letter-spacing:.04em;transition:color .15s}
-    .item.checked .item-label{color:var(--tx)}
+    /* ── Home top ── */
+    .h-top{padding:calc(env(safe-area-inset-top) + 28px) 18px 0;position:relative}
+    .h-label{font:700 10px/1 var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--mu);margin-bottom:10px}
+    .h-logo{font:800 48px/1 var(--head);letter-spacing:-.02em;margin-bottom:28px}
+    .h-logo em{color:var(--y);font-style:normal}
+    .h-settings-btn{position:absolute;top:calc(env(safe-area-inset-top) + 28px);right:18px;
+                    background:none;border:none;color:var(--mu);font:400 11px/1 var(--mono);
+                    cursor:pointer;letter-spacing:.06em;padding:4px 0;transition:color .12s}
+    .h-settings-btn:active{color:var(--y)}
 
-    /* ── Progress bar ── */
-    .progress-bar{height:2px;background:var(--bd);border-radius:1px;margin-bottom:8px;overflow:hidden}
-    .progress-fill{height:100%;background:var(--y);border-radius:1px;transition:width .25s ease}
-    .all-done .progress-fill{background:var(--gr)}
+    /* ── Card grid ── */
+    .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 18px}
+    .card{background:var(--s1);border:1px solid var(--bd);border-radius:4px;
+          padding:18px 15px 14px;cursor:pointer;position:relative;
+          transition:border-color .12s;user-select:none}
+    .card:active{background:var(--s2)}
+    .card.done{border-color:var(--y)}
+    .card.done::after{content:'✓';position:absolute;top:11px;right:13px;
+                      font:11px/1 var(--mono);color:var(--y)}
+    .card-t{font:700 13px/1 var(--head);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px}
+    .card-s{font:400 10px/1.4 var(--mono);color:var(--mu);letter-spacing:.04em;margin-bottom:12px}
+    .card-bar{height:2px;background:var(--bd);border-radius:1px;overflow:hidden}
+    .card-bar-fill{height:100%;background:var(--y);border-radius:1px;transition:width .25s ease}
+    .card.done .card-bar-fill{background:var(--gr)}
 
-    /* ── Reset ── */
-    .reset-btn{display:block;margin:0 18px;width:calc(100% - 36px);background:transparent;
-               border:1px solid var(--bd);border-radius:3px;color:var(--mu);
-               font:400 10px/1 var(--mono);letter-spacing:.1em;text-transform:uppercase;
-               padding:12px;cursor:pointer;transition:all .12s;text-align:center}
-    .reset-btn:active{background:var(--s2);color:var(--tx)}
+    /* ── Checklist screen ── */
+    .cnt{padding:18px}
+    .cl-progress{margin-bottom:16px}
+    .cl-bar{height:3px;background:var(--bd);border-radius:2px;overflow:hidden;margin-bottom:8px}
+    .cl-bar-fill{height:100%;background:var(--y);border-radius:2px;transition:width .25s ease}
+    .cl-progress.all-done .cl-bar-fill{background:var(--gr)}
+    .cl-stats{font:400 10px/1 var(--mono);color:var(--mu);letter-spacing:.06em}
+    .cl-stats em{color:var(--y);font-style:normal}
+    .cl-progress.all-done .cl-stats em{color:var(--gr)}
 
-    /* ── All done banner ── */
-    .done-banner{margin:0 18px 24px;padding:14px;background:rgba(92,219,125,.07);
-                 border:1px solid rgba(92,219,125,.2);border-radius:4px;
-                 font:400 11px/1.6 var(--mono);color:var(--gr);letter-spacing:.06em;text-align:center;
-                 display:none}
+    /* ── Item toggle buttons ── */
+    .item-btn{width:100%;background:var(--s1);border:1px solid var(--bd);border-radius:3px;
+              color:var(--mu);font:400 13px/1 var(--mono);letter-spacing:.05em;
+              padding:15px 14px;cursor:pointer;text-align:left;
+              display:flex;align-items:center;justify-content:space-between;
+              margin-bottom:6px;transition:all .1s}
+    .item-btn:active{background:var(--s2)}
+    .item-btn.checked{background:var(--yd);border-color:var(--y);color:var(--tx)}
+    .item-check-ico{width:18px;height:18px;border-radius:3px;border:1.5px solid var(--bd);
+                    flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+    .item-btn.checked .item-check-ico{background:var(--y);border-color:var(--y)}
+    .item-check-svg{width:10px;height:10px;opacity:0;transition:opacity .1s}
+    .item-btn.checked .item-check-svg{opacity:1}
+
+    /* ── Done banner ── */
+    .done-banner{background:rgba(92,219,125,.07);border:1px solid rgba(92,219,125,.2);
+                 border-radius:4px;font:400 11px/1.6 var(--mono);color:var(--gr);
+                 letter-spacing:.06em;text-align:center;padding:14px;margin-bottom:14px;display:none}
     .done-banner.show{display:block}
+
+    /* ── Settings ── */
+    .sec{font:700 10px/1 var(--head);letter-spacing:.15em;text-transform:uppercase;color:var(--y);
+         margin:20px 0 12px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
+    .setting-row{display:flex;align-items:center;justify-content:space-between;
+                 background:var(--s1);border:1px solid var(--bd);border-radius:3px;
+                 padding:13px 14px;margin-bottom:8px}
+    .setting-lbl{font:400 11px/1 var(--mono);letter-spacing:.06em;color:var(--mu)}
+    .setting-btn{background:var(--s2);border:1px solid var(--bd);border-radius:3px;
+                 color:var(--tx);font:400 10px/1 var(--mono);letter-spacing:.08em;
+                 padding:9px 13px;cursor:pointer;transition:all .12s;white-space:nowrap}
+    .setting-btn:active{border-color:var(--y);color:var(--y)}
+    .setting-btn.danger{color:var(--re)}
+    .setting-btn.danger:active{border-color:var(--re)}
+    .data-warn{font:400 10px/1.6 var(--mono);color:var(--mu);padding:12px 14px;margin-bottom:16px;
+               background:var(--s1);border:1px solid var(--bd);border-radius:3px}
   </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="top">
-    <div class="date" id="date-label">—</div>
-    <div class="logo">COMPLETE<em>.</em></div>
-  </div>
 
-  <div class="section" id="sec-morning">
-    <div class="sec-header">
-      <span class="sec-title">morning</span>
-      <span class="sec-progress" id="prog-morning">0 / 7</span>
+<!-- ═══ HOME ════════════════════════════════════════════════════════════════ -->
+<div id="s-home" class="scr on">
+  <div class="h-top">
+    <div class="h-label" id="date-label">—</div>
+    <div class="h-logo">DO<em>.</em></div>
+    <button class="h-settings-btn" onclick="go('settings')">settings</button>
+  </div>
+  <div class="grid" id="home-grid"></div>
+</div>
+
+<!-- ═══ CHECKLIST ════════════════════════════════════════════════════════════ -->
+<div id="s-checklist" class="scr">
+  <div class="hd">
+    <button class="hd-back" onclick="go('home')">← back</button>
+    <span class="hd-title" id="cl-title">—</span>
+    <button class="hd-action" id="cl-action-btn" onclick="toggleAll()">mark all</button>
+  </div>
+  <div class="cnt">
+    <div class="cl-progress" id="cl-progress">
+      <div class="cl-bar"><div class="cl-bar-fill" id="cl-bar-fill" style="width:0%"></div></div>
+      <div class="cl-stats" id="cl-stats"><em>0</em> / 0</div>
     </div>
-    <div class="progress-bar"><div class="progress-fill" id="bar-morning" style="width:0%"></div></div>
-    <div id="list-morning"></div>
+    <div class="done-banner" id="cl-done-banner">all done ✓</div>
+    <div id="cl-items"></div>
   </div>
+</div>
 
-  <div class="section" id="sec-evening">
-    <div class="sec-header">
-      <span class="sec-title">evening</span>
-      <span class="sec-progress" id="prog-evening">0 / 5</span>
+<!-- ═══ SETTINGS ════════════════════════════════════════════════════════════ -->
+<div id="s-settings" class="scr">
+  <div class="hd">
+    <button class="hd-back" onclick="go('home')">← back</button>
+    <span class="hd-title">Settings</span>
+  </div>
+  <div class="cnt">
+    <div class="sec">App</div>
+    <div class="data-warn">Data is stored locally on this device and resets automatically each day.</div>
+    <div class="setting-row">
+      <span class="setting-lbl">Reload page</span>
+      <button class="setting-btn" onclick="window.location.reload()">reload</button>
     </div>
-    <div class="progress-bar"><div class="progress-fill" id="bar-evening" style="width:0%"></div></div>
-    <div id="list-evening"></div>
+    <div class="setting-row">
+      <span class="setting-lbl">Reset today's progress</span>
+      <button class="setting-btn danger" onclick="resetDay()">reset</button>
+    </div>
   </div>
-
-  <div class="done-banner" id="done-banner">all done for today ✓</div>
-  <button class="reset-btn" onclick="resetDay()">reset today</button>
 </div>
 
 <script>
 const ROUTINES = {
-  morning: ['coffee','meds','walk','breakfast','shower','face','journal entry'],
-  evening: ['log','prep clothes','prep breakfast','prep coffee','plan'],
+  routinep1: { label: 'Routine P1', items: ['coffee','meds','walk','breakfast','shower','face','journal entry'] },
+  routinep2: { label: 'Routine P2', items: ['log','prep clothes','prep breakfast','prep coffee','plan'] },
+  cleanup:   { label: 'Cleanup',    items: ['dishes','plants','vacuum','tidy up','kamo water','windows'] },
+  deepclean: { label: 'Deep Clean', items: ['dusting','vacuum','surfaces','bathroom sink','toilet','trash'] },
 };
 
 const TODAY = new Date().toISOString().split('T')[0];
-const SK = 'complete_' + TODAY;
+const SK = 'do_' + TODAY;
 
 let state = {};
+let currentRoutine = null;
 
 function loadState() {
   try {
     const raw = localStorage.getItem(SK);
     if (raw) { state = JSON.parse(raw); return; }
   } catch {}
-  // Fresh day — also clear old keys
-  Object.keys(localStorage).filter(k => k.startsWith('complete_') && k !== SK)
+  Object.keys(localStorage).filter(k => k.startsWith('do_') && k !== SK)
     .forEach(k => localStorage.removeItem(k));
-  state = { morning: {}, evening: {} };
+  state = { routinep1:{}, routinep2:{}, cleanup:{}, deepclean:{} };
 }
 
 function saveState() { localStorage.setItem(SK, JSON.stringify(state)); }
 
-function toggle(section, item) {
-  state[section][item] = !state[section][item];
+function toggle(key, item) {
+  if (!state[key]) state[key] = {};
+  state[key][item] = !state[key][item];
   saveState();
-  render();
+  renderChecklist();
+  renderHome();
 }
 
-function render() {
+function go(id) {
+  document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+  document.getElementById('s-' + id).classList.add('on');
+  window.scrollTo(0, 0);
+  if (id === 'home') renderHome();
+  if (id === 'checklist') renderChecklist();
+}
+
+function openRoutine(key) {
+  currentRoutine = key;
+  document.getElementById('cl-title').textContent = ROUTINES[key].label;
+  go('checklist');
+}
+
+function renderHome() {
   document.getElementById('date-label').textContent =
     new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).toUpperCase();
 
-  let totalDone = 0, totalAll = 0;
+  document.getElementById('home-grid').innerHTML = Object.entries(ROUTINES).map(([key, r]) => {
+    const done = r.items.filter(i => state[key]?.[i]).length;
+    const pct  = r.items.length ? Math.round((done / r.items.length) * 100) : 0;
+    const isDone = done === r.items.length;
+    return `<div class="card${isDone ? ' done' : ''}" onclick="openRoutine('${key}')">
+      <div class="card-t">${r.label}</div>
+      <div class="card-s">${done} / ${r.items.length} done</div>
+      <div class="card-bar"><div class="card-bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
 
-  Object.entries(ROUTINES).forEach(([section, items]) => {
-    const list = document.getElementById('list-' + section);
-    const prog = document.getElementById('prog-' + section);
-    const bar  = document.getElementById('bar-' + section);
-    const sec  = document.getElementById('sec-' + section);
+function renderChecklist() {
+  if (!currentRoutine) return;
+  const key   = currentRoutine;
+  const items = ROUTINES[key].items;
+  const done  = items.filter(i => state[key]?.[i]).length;
+  const pct   = items.length ? Math.round((done / items.length) * 100) : 0;
+  const allDone = done === items.length;
 
-    const done = items.filter(i => state[section]?.[i]).length;
-    const pct  = Math.round((done / items.length) * 100);
-    totalDone += done; totalAll += items.length;
+  document.getElementById('cl-progress').classList.toggle('all-done', allDone);
+  document.getElementById('cl-bar-fill').style.width = pct + '%';
+  document.getElementById('cl-stats').innerHTML = `<em>${done}</em> / ${items.length}`;
+  document.getElementById('cl-done-banner').classList.toggle('show', allDone);
+  document.getElementById('cl-action-btn').textContent = allDone ? 'clear all' : 'mark all';
 
-    bar.style.width = pct + '%';
-    prog.innerHTML = `<em>${done}</em> / ${items.length}`;
-    prog.className = 'sec-progress' + (done === items.length ? ' done' : '');
-    if (done === items.length) bar.parentElement.classList.add('all-done');
-    else bar.parentElement.classList.remove('all-done');
+  document.getElementById('cl-items').innerHTML = items.map(item => {
+    const checked = !!state[key]?.[item];
+    const safeItem = item.replace(/'/g, "\\'");
+    return `<button class="item-btn${checked ? ' checked' : ''}" onclick="toggle('${key}','${safeItem}')">
+      <span>${item}</span>
+      <div class="item-check-ico">
+        <svg class="item-check-svg" viewBox="0 0 10 10" fill="none">
+          <path d="M1.5 5L4 7.5L8.5 2.5" stroke="#0e0e0e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </button>`;
+  }).join('');
+}
 
-    list.innerHTML = items.map(item => `
-      <div class="item${state[section]?.[item] ? ' checked' : ''}" onclick="toggle('${section}','${item}')">
-        <div class="item-box">
-          <svg class="item-check" viewBox="0 0 10 10" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M1.5 5L4 7.5L8.5 2.5" stroke="#0e0e0e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-        </div>
-        <span class="item-label">${item}</span>
-      </div>`).join('');
-  });
-
-  document.getElementById('done-banner').classList.toggle('show', totalDone === totalAll);
+function toggleAll() {
+  if (!currentRoutine) return;
+  const key   = currentRoutine;
+  const items = ROUTINES[key].items;
+  const done  = items.filter(i => state[key]?.[i]).length;
+  const allDone = done === items.length;
+  if (!state[key]) state[key] = {};
+  items.forEach(i => { state[key][i] = !allDone; });
+  saveState();
+  renderChecklist();
+  renderHome();
 }
 
 function resetDay() {
-  if (!confirm('Reset all items?')) return;
-  state = { morning: {}, evening: {} };
-  saveState(); render();
+  if (!confirm('Reset all items for today?')) return;
+  state = { routinep1:{}, routinep2:{}, cleanup:{}, deepclean:{} };
+  saveState();
+  go('home');
 }
 
 loadState();
-render();
+renderHome();
 </script>
 </body>
 </html>
