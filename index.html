@@ -278,7 +278,7 @@ const TRAVEL_DEFAULTS = {
   toiletries:  ['1 toothbrush','1 toothpaste','1 face cream','1 eye cream','1 soap tube','1 facewash tube','1 shampoo tube'],
   electronics: ['1 phone','1 watch','1 plug','1 usb c to a','1 usb c to c','1 watch cable','1 charge block','1 usb a fast power','1 mac charger','1 mac','1 laptop pounch','1 battery bank small','1 battery bank big','2 micro usb cable'],
   kamo:        ['3 toys','1 croquette bag','1 black leash','1 long leash','1 towel','1 duvet','1 frontale','2 harness','2 poop bag','2 bowls'],
-  satchel:     ['id','wallet','tissues','chapstick','portable ashtray','earplugs','tobacco','papers','filters','lighter','4 € in coins'],
+  satchel:     ['id','wallet','tissues','chapstick','earplugs','e-cig','4 € in coins'],
 };
 const TRAVEL_SECTIONS = ['clothes','toiletries','electronics','kamo','satchel'];
 const TRAVEL_KEY = 'travel_state_v1';
@@ -319,6 +319,38 @@ function loadTravel() {
   travel.checked = travel.checked || {};
   travel.counts  = travel.counts  || {};
   TRAVEL_SECTIONS.forEach(s => { if (!travel.sections[s]) travel.sections[s] = [...TRAVEL_DEFAULTS[s]]; });
+  migrateTravel();
+}
+
+// one-time migrations to keep saved state in sync with intentional default changes
+function migrateTravel() {
+  const MIGRATIONS = ['drop-smoking-add-ecig'];
+  travel.migrations = travel.migrations || [];
+  let changed = false;
+
+  if (!travel.migrations.includes('drop-smoking-add-ecig')) {
+    const drop = new Set(['tobacco','papers','filters','lighter','portable ashtray']);
+    if (travel.sections.satchel) {
+      travel.sections.satchel = travel.sections.satchel.filter(item => {
+        if (drop.has(item)) {
+          delete travel.checked[itemKey('satchel', item)];
+          delete travel.counts[itemKey('satchel', item)];
+          return false;
+        }
+        return true;
+      });
+      if (!travel.sections.satchel.includes('e-cig')) {
+        // insert before "4 € in coins" if present, else append
+        const coinIdx = travel.sections.satchel.indexOf('4 € in coins');
+        if (coinIdx >= 0) travel.sections.satchel.splice(coinIdx, 0, 'e-cig');
+        else travel.sections.satchel.push('e-cig');
+      }
+    }
+    travel.migrations.push('drop-smoking-add-ecig');
+    changed = true;
+  }
+
+  if (changed) saveTravel();
 }
 
 function saveTravel() { localStorage.setItem(TRAVEL_KEY, JSON.stringify(travel)); }
