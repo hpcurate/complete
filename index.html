@@ -125,12 +125,19 @@
              margin-bottom:6px;transition:all .1s}
     .tv-item:active{background:var(--s2)}
     .tv-item.checked{background:var(--yd);border-color:var(--y);color:var(--tx)}
+    .tv-count-grp{display:flex;gap:3px;flex-shrink:0}
     .tv-count{background:var(--s2);border:1px solid var(--bd);border-radius:3px;
               font:700 11px/1 var(--mono);color:var(--y);letter-spacing:.04em;
               padding:6px 9px;min-width:34px;text-align:center;cursor:pointer;
-              transition:all .1s;flex-shrink:0;user-select:none}
+              transition:all .1s;user-select:none}
     .tv-count:active{background:var(--yd);border-color:var(--y)}
     .tv-item.checked .tv-count{background:var(--bg);border-color:var(--y)}
+    .tv-dec{background:var(--s2);border:1px solid var(--bd);border-radius:3px;
+            font:700 12px/1 var(--mono);color:var(--mu);
+            padding:6px 8px;min-width:24px;text-align:center;cursor:pointer;
+            transition:all .1s;user-select:none}
+    .tv-dec:active{color:var(--re);border-color:var(--re)}
+    .tv-dec.disabled{opacity:.25;pointer-events:none}
     .tv-qty{font:700 11px/1 var(--mono);color:var(--mu);letter-spacing:.04em;
             padding:6px 9px;min-width:34px;text-align:center;flex-shrink:0;
             background:var(--s2);border:1px solid var(--bd);border-radius:3px;user-select:none}
@@ -214,17 +221,17 @@
   </div>
 </div>
 
-<!-- ═══ TRAVEL CLOTHES EDIT ══════════════════════════════════════════════════ -->
+<!-- ═══ TRAVEL EDIT ══════════════════════════════════════════════════════════ -->
 <div id="s-travel-edit" class="scr">
   <div class="hd">
     <button class="hd-back" onclick="go('travel')">← back</button>
-    <span class="hd-title">Edit Clothes</span>
+    <span class="hd-title" id="tv-edit-title">Edit</span>
     <button class="hd-action" onclick="saveTravelEdit()">save</button>
   </div>
   <div class="cnt">
     <div class="tv-edit-row">
       <input type="text" id="tv-edit-input" class="tv-edit-input" placeholder="add item…">
-      <button class="tv-edit-add" onclick="addClothesItem()">+ add</button>
+      <button class="tv-edit-add" onclick="addEditItem()">+ add</button>
     </div>
     <div id="tv-edit-list"></div>
   </div>
@@ -282,6 +289,7 @@ const SK = 'do_' + TODAY;
 let state = {};
 let currentRoutine = null;
 let travel = null;
+let editSection = null;
 
 function loadState() {
   try {
@@ -443,9 +451,7 @@ function renderTravel() {
 
   document.getElementById('tv-sections').innerHTML = TRAVEL_SECTIONS.map(sec => {
     const items = travel.sections[sec] || [];
-    const isClothes = sec === 'clothes';
-    const headAction = isClothes
-      ? `<button class="tv-sec-act" onclick="go('travel-edit')">edit</button>` : '';
+    const headAction = `<button class="tv-sec-act" onclick="openTravelEdit('${sec}')">edit</button>`;
     const rows = items.map(item => {
       const key = itemKey(sec, item);
       const checked = !!travel.checked[key];
@@ -453,8 +459,11 @@ function renderTravel() {
       let qtyEl = '';
       if (isCounterItem(item)) {
         const n = travel.counts[key] ?? 1;
-        qtyEl = `<span class="tv-count" onclick="event.stopPropagation();bumpCount('${sec}','${safeItem}')"
-                 oncontextmenu="event.preventDefault();resetCount('${sec}','${safeItem}');return false">${n}×</span>`;
+        const decDisabled = n <= 1 ? ' disabled' : '';
+        qtyEl = `<span class="tv-count-grp">
+          <span class="tv-count" onclick="event.stopPropagation();bumpCount('${sec}','${safeItem}')">${n}×</span>
+          <span class="tv-dec${decDisabled}" onclick="event.stopPropagation();decCount('${sec}','${safeItem}')">−</span>
+        </span>`;
       } else {
         const fixed = itemFixedQty(item);
         if (fixed !== null) qtyEl = `<span class="tv-qty">${fixed}×</span>`;
@@ -489,48 +498,55 @@ function bumpCount(sec, item) {
   renderTravel();
 }
 
-function resetCount(sec, item) {
+function decCount(sec, item) {
   const key = itemKey(sec, item);
-  travel.counts[key] = 1;
+  const cur = travel.counts[key] ?? 1;
+  if (cur <= 1) return;
+  travel.counts[key] = cur - 1;
   saveTravel();
   renderTravel();
-  toast('count reset');
+}
+
+function openTravelEdit(sec) {
+  editSection = sec;
+  go('travel-edit');
 }
 
 function renderTravelEdit() {
-  const list = travel.sections.clothes || [];
+  if (!editSection) editSection = 'clothes';
+  document.getElementById('tv-edit-title').textContent = 'Edit ' + editSection;
+  const list = travel.sections[editSection] || [];
   document.getElementById('tv-edit-list').innerHTML = list.map((item, i) => `
     <div class="tv-edit-item">
       <span class="tv-edit-item-txt">${esc(item)}</span>
-      <button class="tv-edit-del" onclick="deleteClothesItem(${i})">✕</button>
+      <button class="tv-edit-del" onclick="deleteEditItem(${i})">✕</button>
     </div>`).join('');
   document.getElementById('tv-edit-input').value = '';
 }
 
-function addClothesItem() {
+function addEditItem() {
   const inp = document.getElementById('tv-edit-input');
   let txt = inp.value.trim();
   if (!txt) return;
   // if user didn't prefix with x/number, default to "x " (tappable counter)
   if (!/^(x|\d+)\s/i.test(txt)) txt = 'x ' + txt;
-  travel.sections.clothes.push(txt);
+  travel.sections[editSection].push(txt);
   saveTravel();
   renderTravelEdit();
 }
 
-function deleteClothesItem(i) {
-  const item = travel.sections.clothes[i];
-  travel.sections.clothes.splice(i, 1);
-  // clean up state for the removed item
-  delete travel.checked[itemKey('clothes', item)];
-  delete travel.counts[itemKey('clothes', item)];
+function deleteEditItem(i) {
+  const item = travel.sections[editSection][i];
+  travel.sections[editSection].splice(i, 1);
+  delete travel.checked[itemKey(editSection, item)];
+  delete travel.counts[itemKey(editSection, item)];
   saveTravel();
   renderTravelEdit();
 }
 
 function saveTravelEdit() {
   saveTravel();
-  toast('clothes saved');
+  toast(editSection + ' saved');
   go('travel');
 }
 
