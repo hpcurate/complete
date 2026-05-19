@@ -9,14 +9,14 @@
   <meta name="theme-color" content="#0e0e0e">
   <title>DO</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg:#0e0e0e; --s1:#161616; --s2:#1e1e1e; --bd:#272727;
       --y:#A78BFA; --yd:rgba(167,139,250,.13);
       --tx:#dedede; --mu:#4a4a4a;
       --gr:#5cdb7d; --re:#e06060;
-      --mono:'Space Mono','Courier New',monospace;
+      --mono:'JetBrains Mono','Courier New',monospace;
       --head:'Syne',sans-serif;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
@@ -109,6 +109,63 @@
     .setting-btn.danger:active{border-color:var(--re)}
     .data-warn{font:400 10px/1.6 var(--mono);color:var(--mu);padding:12px 14px;margin-bottom:16px;
                background:var(--s1);border:1px solid var(--bd);border-radius:3px}
+
+    /* ── Travel ── */
+    .tv-sec{font:700 10px/1 var(--head);letter-spacing:.15em;text-transform:uppercase;color:var(--y);
+            margin:22px 0 10px;padding-bottom:8px;border-bottom:1px solid var(--bd);
+            display:flex;align-items:center;justify-content:space-between}
+    .tv-sec:first-child{margin-top:0}
+    .tv-sec-act{background:none;border:none;color:var(--mu);font:400 9px/1 var(--mono);
+                letter-spacing:.08em;cursor:pointer;padding:2px 0;text-transform:uppercase}
+    .tv-sec-act:active{color:var(--y)}
+    .tv-item{width:100%;background:var(--s1);border:1px solid var(--bd);border-radius:3px;
+             color:var(--mu);font:400 13px/1 var(--mono);letter-spacing:.05em;
+             padding:13px 14px;cursor:pointer;text-align:left;
+             display:flex;align-items:center;gap:11px;
+             margin-bottom:6px;transition:all .1s}
+    .tv-item:active{background:var(--s2)}
+    .tv-item.checked{background:var(--yd);border-color:var(--y);color:var(--tx)}
+    .tv-count{background:var(--s2);border:1px solid var(--bd);border-radius:3px;
+              font:700 11px/1 var(--mono);color:var(--y);letter-spacing:.04em;
+              padding:6px 9px;min-width:34px;text-align:center;cursor:pointer;
+              transition:all .1s;flex-shrink:0;user-select:none}
+    .tv-count:active{background:var(--yd);border-color:var(--y)}
+    .tv-item.checked .tv-count{background:var(--bg);border-color:var(--y)}
+    .tv-qty{font:700 11px/1 var(--mono);color:var(--mu);letter-spacing:.04em;
+            padding:6px 9px;min-width:34px;text-align:center;flex-shrink:0;
+            background:var(--s2);border:1px solid var(--bd);border-radius:3px;user-select:none}
+    .tv-item.checked .tv-qty{color:var(--tx)}
+    .tv-name{flex:1;min-width:0;word-break:break-word}
+    .tv-check{width:18px;height:18px;border-radius:3px;border:1.5px solid var(--bd);
+              flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .15s}
+    .tv-item.checked .tv-check{background:var(--y);border-color:var(--y)}
+    .tv-check-svg{width:10px;height:10px;opacity:0;transition:opacity .1s}
+    .tv-item.checked .tv-check-svg{opacity:1}
+
+    /* clothes editor row */
+    .tv-edit-row{display:grid;grid-template-columns:1fr auto;gap:6px;margin-bottom:6px}
+    .tv-edit-input{background:var(--s1);border:1px solid var(--bd);border-radius:3px;
+                   color:var(--tx);font:400 13px/1 var(--mono);padding:11px 12px;outline:none;
+                   -webkit-appearance:none;transition:border-color .12s;width:100%}
+    .tv-edit-input:focus{border-color:var(--y)}
+    .tv-edit-add{background:var(--y);border:none;border-radius:3px;color:#0e0e0e;
+                 font:700 11px/1 var(--mono);letter-spacing:.06em;padding:11px 14px;
+                 cursor:pointer;white-space:nowrap}
+    .tv-edit-add:active{opacity:.82}
+    .tv-edit-item{background:var(--s1);border:1px solid var(--bd);border-radius:3px;
+                  padding:9px 12px;margin-bottom:5px;display:grid;
+                  grid-template-columns:1fr auto;gap:10px;align-items:center}
+    .tv-edit-item-txt{font:400 12px/1 var(--mono);color:var(--tx)}
+    .tv-edit-del{background:none;border:none;color:var(--mu);font:400 13px/1 var(--mono);
+                 cursor:pointer;padding:2px}
+    .tv-edit-del:active{color:var(--re)}
+
+    /* toast */
+    .toast{position:fixed;bottom:calc(24px + env(safe-area-inset-bottom));left:50%;
+           transform:translateX(-50%) translateY(120px);background:var(--y);color:#0e0e0e;
+           font:700 11px/1 var(--mono);letter-spacing:.08em;padding:9px 18px;border-radius:3px;
+           transition:transform .18s ease;z-index:99;pointer-events:none;white-space:nowrap}
+    .toast.show{transform:translateX(-50%) translateY(0)}
   </style>
 </head>
 <body>
@@ -140,6 +197,39 @@
   </div>
 </div>
 
+<!-- ═══ TRAVEL ═══════════════════════════════════════════════════════════════ -->
+<div id="s-travel" class="scr">
+  <div class="hd">
+    <button class="hd-back" onclick="go('home')">← back</button>
+    <span class="hd-title">Travel</span>
+    <button class="hd-action" onclick="exportTravelMd()">export .md</button>
+  </div>
+  <div class="cnt">
+    <div class="cl-progress" id="tv-progress">
+      <div class="cl-bar"><div class="cl-bar-fill" id="tv-bar-fill" style="width:0%"></div></div>
+      <div class="cl-stats" id="tv-stats"><em>0</em> / 0</div>
+    </div>
+    <div class="done-banner" id="tv-done-banner">all packed ✓</div>
+    <div id="tv-sections"></div>
+  </div>
+</div>
+
+<!-- ═══ TRAVEL CLOTHES EDIT ══════════════════════════════════════════════════ -->
+<div id="s-travel-edit" class="scr">
+  <div class="hd">
+    <button class="hd-back" onclick="go('travel')">← back</button>
+    <span class="hd-title">Edit Clothes</span>
+    <button class="hd-action" onclick="saveTravelEdit()">save</button>
+  </div>
+  <div class="cnt">
+    <div class="tv-edit-row">
+      <input type="text" id="tv-edit-input" class="tv-edit-input" placeholder="add item…">
+      <button class="tv-edit-add" onclick="addClothesItem()">+ add</button>
+    </div>
+    <div id="tv-edit-list"></div>
+  </div>
+</div>
+
 <!-- ═══ SETTINGS ════════════════════════════════════════════════════════════ -->
 <div id="s-settings" class="scr">
   <div class="hd">
@@ -157,8 +247,14 @@
       <span class="setting-lbl">Reset today's progress</span>
       <button class="setting-btn danger" onclick="resetDay()">reset</button>
     </div>
+    <div class="setting-row">
+      <span class="setting-lbl">Reset travel list</span>
+      <button class="setting-btn danger" onclick="resetTravel()">reset</button>
+    </div>
   </div>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script>
 const ROUTINES = {
@@ -168,23 +264,56 @@ const ROUTINES = {
   deepclean: { label: 'Deep Clean', items: ['≋ dusting','⟳ vacuum','▭ surfaces','≈ bathroom sink','○ toilet','✕ trash'] },
 };
 
+// Travel: items prefixed with "x " are tappable counters (default 1).
+// Items prefixed with a number have a fixed quantity. No number → name only.
+const TRAVEL_DEFAULTS = {
+  clothes:     ['x shirts','x boxers','x socks','x sweatpant','x pants','x sweater'],
+  toiletries:  ['1 toothbrush','1 toothpaste','1 face cream','1 eye cream','1 soap tube','1 facewash tube','1 shampoo tube'],
+  electronics: ['1 phone','1 watch','1 plug','1 usb c to a','1 usb c to c','1 watch cable','1 charge block','1 usb a fast power','1 mac charger','1 mac','1 laptop pounch','1 battery bank small','1 battery bank big','2 micro usb cable'],
+  kamo:        ['3 toys','1 croquette bag','1 black leash','1 long leash','1 towel','1 duvet','1 frontale','2 harness','2 poop bag','2 bowls'],
+  satchel:     ['id','wallet','tissues','chapstick','portable ashtray','earplugs','tobacco','papers','filters','lighter','4 € in coins'],
+};
+const TRAVEL_SECTIONS = ['clothes','toiletries','electronics','kamo','satchel'];
+const TRAVEL_KEY = 'travel_state_v1';
+
 const TODAY = new Date().toISOString().split('T')[0];
 const SK = 'do_' + TODAY;
 
 let state = {};
 let currentRoutine = null;
+let travel = null;
 
 function loadState() {
   try {
     const raw = localStorage.getItem(SK);
-    if (raw) { state = JSON.parse(raw); return; }
-  } catch {}
-  Object.keys(localStorage).filter(k => k.startsWith('do_') && k !== SK)
-    .forEach(k => localStorage.removeItem(k));
-  state = { routinep1:{}, routinep2:{}, cleanup:{}, deepclean:{} };
+    if (raw) { state = JSON.parse(raw); }
+    else {
+      Object.keys(localStorage).filter(k => k.startsWith('do_') && k !== SK)
+        .forEach(k => localStorage.removeItem(k));
+      state = { routinep1:{}, routinep2:{}, cleanup:{}, deepclean:{} };
+    }
+  } catch { state = { routinep1:{}, routinep2:{}, cleanup:{}, deepclean:{} }; }
+  loadTravel();
 }
 
 function saveState() { localStorage.setItem(SK, JSON.stringify(state)); }
+
+function loadTravel() {
+  try {
+    const raw = localStorage.getItem(TRAVEL_KEY);
+    if (raw) { travel = JSON.parse(raw); }
+  } catch {}
+  if (!travel || !travel.sections) {
+    travel = { sections:{}, checked:{}, counts:{} };
+    TRAVEL_SECTIONS.forEach(s => travel.sections[s] = [...TRAVEL_DEFAULTS[s]]);
+  }
+  // ensure structure is well-formed
+  travel.checked = travel.checked || {};
+  travel.counts  = travel.counts  || {};
+  TRAVEL_SECTIONS.forEach(s => { if (!travel.sections[s]) travel.sections[s] = [...TRAVEL_DEFAULTS[s]]; });
+}
+
+function saveTravel() { localStorage.setItem(TRAVEL_KEY, JSON.stringify(travel)); }
 
 function toggle(key, item) {
   if (!state[key]) state[key] = {};
@@ -200,6 +329,8 @@ function go(id) {
   window.scrollTo(0, 0);
   if (id === 'home') renderHome();
   if (id === 'checklist') renderChecklist();
+  if (id === 'travel') renderTravel();
+  if (id === 'travel-edit') renderTravelEdit();
 }
 
 function openRoutine(key) {
@@ -212,7 +343,7 @@ function renderHome() {
   document.getElementById('date-label').textContent =
     new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).toUpperCase();
 
-  document.getElementById('home-grid').innerHTML = Object.entries(ROUTINES).map(([key, r]) => {
+  const routineCards = Object.entries(ROUTINES).map(([key, r]) => {
     const done = r.items.filter(i => state[key]?.[i]).length;
     const pct  = r.items.length ? Math.round((done / r.items.length) * 100) : 0;
     const isDone = done === r.items.length;
@@ -222,7 +353,34 @@ function renderHome() {
       <div class="card-bar"><div class="card-bar-fill" style="width:${pct}%"></div></div>
     </div>`;
   }).join('');
+
+  const tStat = travelStats();
+  const tDone = tStat.done === tStat.total && tStat.total > 0;
+  const travelCard = `<div class="card${tDone ? ' done' : ''}" onclick="go('travel')">
+    <div class="card-t">Travel</div>
+    <div class="card-s">${tStat.done} / ${tStat.total} packed</div>
+    <div class="card-bar"><div class="card-bar-fill" style="width:${tStat.pct}%"></div></div>
+  </div>`;
+
+  document.getElementById('home-grid').innerHTML = routineCards + travelCard;
 }
+
+function travelStats() {
+  let done = 0, total = 0;
+  TRAVEL_SECTIONS.forEach(sec => {
+    (travel.sections[sec] || []).forEach(item => {
+      total++;
+      if (travel.checked[itemKey(sec, item)]) done++;
+    });
+  });
+  const pct = total ? Math.round((done / total) * 100) : 0;
+  return { done, total, pct };
+}
+
+function itemKey(sec, item) { return sec + '::' + item; }
+function isCounterItem(item) { return /^x\s/i.test(item); }
+function itemDisplayName(item) { return item.replace(/^(x|\d+)\s+/i, ''); }
+function itemFixedQty(item) { const m = item.match(/^(\d+)\s+/); return m ? parseInt(m[1], 10) : null; }
 
 function renderChecklist() {
   if (!currentRoutine) return;
@@ -270,6 +428,157 @@ function resetDay() {
   state = { routinep1:{}, routinep2:{}, cleanup:{}, deepclean:{} };
   saveState();
   go('home');
+}
+
+// ── Travel ────────────────────────────────────────────────────────────────────
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderTravel() {
+  const stat = travelStats();
+  const allDone = stat.done === stat.total && stat.total > 0;
+  document.getElementById('tv-progress').classList.toggle('all-done', allDone);
+  document.getElementById('tv-bar-fill').style.width = stat.pct + '%';
+  document.getElementById('tv-stats').innerHTML = `<em>${stat.done}</em> / ${stat.total}`;
+  document.getElementById('tv-done-banner').classList.toggle('show', allDone);
+
+  document.getElementById('tv-sections').innerHTML = TRAVEL_SECTIONS.map(sec => {
+    const items = travel.sections[sec] || [];
+    const isClothes = sec === 'clothes';
+    const headAction = isClothes
+      ? `<button class="tv-sec-act" onclick="go('travel-edit')">edit</button>` : '';
+    const rows = items.map(item => {
+      const key = itemKey(sec, item);
+      const checked = !!travel.checked[key];
+      const safeItem = item.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      let qtyEl = '';
+      if (isCounterItem(item)) {
+        const n = travel.counts[key] ?? 1;
+        qtyEl = `<span class="tv-count" onclick="event.stopPropagation();bumpCount('${sec}','${safeItem}')"
+                 oncontextmenu="event.preventDefault();resetCount('${sec}','${safeItem}');return false">${n}×</span>`;
+      } else {
+        const fixed = itemFixedQty(item);
+        if (fixed !== null) qtyEl = `<span class="tv-qty">${fixed}×</span>`;
+      }
+      const name = itemDisplayName(item);
+      return `<button class="tv-item${checked ? ' checked' : ''}" onclick="toggleTravel('${sec}','${safeItem}')">
+        ${qtyEl}
+        <span class="tv-name">${esc(name)}</span>
+        <div class="tv-check">
+          <svg class="tv-check-svg" viewBox="0 0 10 10" fill="none">
+            <path d="M1.5 5L4 7.5L8.5 2.5" stroke="#0e0e0e" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </button>`;
+    }).join('');
+    return `<div class="tv-sec"><span>${sec}</span>${headAction}</div>${rows}`;
+  }).join('');
+}
+
+function toggleTravel(sec, item) {
+  const key = itemKey(sec, item);
+  travel.checked[key] = !travel.checked[key];
+  saveTravel();
+  renderTravel();
+}
+
+function bumpCount(sec, item) {
+  const key = itemKey(sec, item);
+  const cur = travel.counts[key] ?? 1;
+  travel.counts[key] = cur + 1;
+  saveTravel();
+  renderTravel();
+}
+
+function resetCount(sec, item) {
+  const key = itemKey(sec, item);
+  travel.counts[key] = 1;
+  saveTravel();
+  renderTravel();
+  toast('count reset');
+}
+
+function renderTravelEdit() {
+  const list = travel.sections.clothes || [];
+  document.getElementById('tv-edit-list').innerHTML = list.map((item, i) => `
+    <div class="tv-edit-item">
+      <span class="tv-edit-item-txt">${esc(item)}</span>
+      <button class="tv-edit-del" onclick="deleteClothesItem(${i})">✕</button>
+    </div>`).join('');
+  document.getElementById('tv-edit-input').value = '';
+}
+
+function addClothesItem() {
+  const inp = document.getElementById('tv-edit-input');
+  let txt = inp.value.trim();
+  if (!txt) return;
+  // if user didn't prefix with x/number, default to "x " (tappable counter)
+  if (!/^(x|\d+)\s/i.test(txt)) txt = 'x ' + txt;
+  travel.sections.clothes.push(txt);
+  saveTravel();
+  renderTravelEdit();
+}
+
+function deleteClothesItem(i) {
+  const item = travel.sections.clothes[i];
+  travel.sections.clothes.splice(i, 1);
+  // clean up state for the removed item
+  delete travel.checked[itemKey('clothes', item)];
+  delete travel.counts[itemKey('clothes', item)];
+  saveTravel();
+  renderTravelEdit();
+}
+
+function saveTravelEdit() {
+  saveTravel();
+  toast('clothes saved');
+  go('travel');
+}
+
+function resetTravel() {
+  if (!confirm('Reset travel list to defaults? This clears all checks and counts.')) return;
+  localStorage.removeItem(TRAVEL_KEY);
+  travel = null;
+  loadTravel();
+  toast('travel reset');
+  go('home');
+}
+
+function exportTravelMd() {
+  const lines = [];
+  TRAVEL_SECTIONS.forEach(sec => {
+    lines.push('#### ' + sec);
+    (travel.sections[sec] || []).forEach(item => {
+      const key = itemKey(sec, item);
+      const checked = !!travel.checked[key];
+      const mark = checked ? 'x' : ' ';
+      let body;
+      if (isCounterItem(item)) {
+        const n = travel.counts[key] ?? 1;
+        body = `${n} ${itemDisplayName(item)}`;
+      } else {
+        body = item;
+      }
+      lines.push(`- [${mark}] ${body}`);
+    });
+    lines.push('');
+  });
+  const md = lines.join('\n');
+  const date = new Date().toISOString().split('T')[0];
+  const filename = `travel_${date}.md`;
+  const blob = new Blob([md], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  toast('exported ' + filename);
+}
+
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 1800);
 }
 
 loadState();
