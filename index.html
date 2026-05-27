@@ -44,8 +44,21 @@
     /* ── Home top ── */
     .h-top{padding:calc(env(safe-area-inset-top) + 28px) 18px 0;position:relative}
     .h-label{font:700 10px/1 var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--mu);margin-bottom:10px}
-    .h-logo{font:800 48px/1 var(--head);letter-spacing:-.02em;margin-bottom:28px}
+    .h-logo-row{display:flex;align-items:center;justify-content:space-between;gap:14px;
+                flex-wrap:wrap;margin-bottom:28px}
+    .h-logo{font:800 48px/1 var(--head);letter-spacing:-.02em}
     .h-logo em{color:var(--y);font-style:normal}
+
+    /* ── Daily / Other tab selector ── */
+    .tabs{position:relative;display:inline-flex;background:var(--s1);
+          border:1px solid var(--bd);border-radius:7px;padding:3px}
+    .tab-glider{position:absolute;top:3px;bottom:3px;left:0;width:0;background:var(--y);
+                border-radius:5px;z-index:1;
+                transition:transform .28s cubic-bezier(.4,0,.2,1),width .28s cubic-bezier(.4,0,.2,1)}
+    .tab{position:relative;z-index:2;background:none;border:none;cursor:pointer;
+         font:700 10px/1 var(--head);letter-spacing:.12em;text-transform:uppercase;
+         color:var(--mu);padding:9px 15px;border-radius:5px;transition:color .25s}
+    .tab.active{color:#0e0e0e}
     .h-settings-btn{position:absolute;top:calc(env(safe-area-inset-top) + 28px);right:18px;
                     background:none;border:none;color:var(--mu);font:400 11px/1 var(--mono);
                     cursor:pointer;letter-spacing:.06em;padding:4px 0;transition:color .12s}
@@ -183,7 +196,14 @@
 <div id="s-home" class="scr on">
   <div class="h-top">
     <div class="h-label" id="date-label">—</div>
-    <div class="h-logo">DO<em>.</em></div>
+    <div class="h-logo-row">
+      <div class="h-logo">DO<em>.</em></div>
+      <div class="tabs" id="home-tabs">
+        <div class="tab-glider" id="tab-glider"></div>
+        <button class="tab active" data-tab="daily" onclick="setTab('daily')">daily</button>
+        <button class="tab" data-tab="other" onclick="setTab('other')">other</button>
+      </div>
+    </div>
     <button class="h-settings-btn" onclick="go('settings')">settings</button>
   </div>
   <div class="grid" id="home-grid"></div>
@@ -288,8 +308,15 @@ const TRAVEL_KEY = 'travel_state_v1';
 const TODAY = new Date().toISOString().split('T')[0];
 const SK = 'do_' + TODAY;
 
+// Which routines live under each home tab. Travel is shown under "other".
+const TAB_ROUTINES = {
+  daily: ['routinep1', 'routinep2', 'cleanup'],
+  other: ['deepclean'],
+};
+
 let state = {};
 let currentRoutine = null;
+let currentTab = 'daily';
 let travel = null;
 let editSection = null;
 
@@ -385,7 +412,8 @@ function renderHome() {
   document.getElementById('date-label').textContent =
     new Date().toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' }).toUpperCase();
 
-  const routineCards = Object.entries(ROUTINES).map(([key, r]) => {
+  const routineCards = (TAB_ROUTINES[currentTab] || []).map(key => {
+    const r = ROUTINES[key];
     const done = r.items.filter(i => state[key]?.[i]).length;
     const pct  = r.items.length ? Math.round((done / r.items.length) * 100) : 0;
     const isDone = done === r.items.length;
@@ -396,15 +424,35 @@ function renderHome() {
     </div>`;
   }).join('');
 
-  const tStat = travelStats();
-  const tDone = tStat.done === tStat.total && tStat.total > 0;
-  const travelCard = `<div class="card${tDone ? ' done' : ''}" onclick="go('travel')">
-    <div class="card-t">Travel</div>
-    <div class="card-s">${tStat.done} / ${tStat.total} packed</div>
-    <div class="card-bar"><div class="card-bar-fill" style="width:${tStat.pct}%"></div></div>
-  </div>`;
+  let travelCard = '';
+  if (currentTab === 'other') {
+    const tStat = travelStats();
+    const tDone = tStat.done === tStat.total && tStat.total > 0;
+    travelCard = `<div class="card${tDone ? ' done' : ''}" onclick="go('travel')">
+      <div class="card-t">Travel</div>
+      <div class="card-s">${tStat.done} / ${tStat.total} packed</div>
+      <div class="card-bar"><div class="card-bar-fill" style="width:${tStat.pct}%"></div></div>
+    </div>`;
+  }
 
   document.getElementById('home-grid').innerHTML = routineCards + travelCard;
+}
+
+function setTab(tab) {
+  if (tab === currentTab) return;
+  currentTab = tab;
+  document.querySelectorAll('#home-tabs .tab')
+    .forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  positionGlider();
+  renderHome();
+}
+
+function positionGlider() {
+  const active = document.querySelector('#home-tabs .tab.active');
+  const glider = document.getElementById('tab-glider');
+  if (!active || !glider) return;
+  glider.style.width = active.offsetWidth + 'px';
+  glider.style.transform = `translateX(${active.offsetLeft}px)`;
 }
 
 function travelStats() {
@@ -633,6 +681,7 @@ function toast(msg) {
 
 loadState();
 renderHome();
+positionGlider();
 </script>
 </body>
 </html>
