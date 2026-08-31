@@ -43,7 +43,8 @@
 
     /* ── Home top ── */
     .h-top{padding:calc(env(safe-area-inset-top) + 28px) 18px 0;position:relative}
-    .h-label{font:700 10px/1 var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--mu);margin-bottom:10px}
+    .h-label{font:700 10px/1 var(--head);letter-spacing:.16em;text-transform:uppercase;color:var(--mu);
+             margin-bottom:10px;padding-right:118px}
     .h-logo-row{display:flex;align-items:center;justify-content:space-between;gap:14px;
                 flex-wrap:wrap;margin-bottom:28px}
     .h-logo{font:800 48px/1 var(--head);letter-spacing:-.02em}
@@ -59,10 +60,12 @@
          font:700 10px/1 var(--head);letter-spacing:.12em;text-transform:uppercase;
          color:var(--mu);padding:9px 15px;border-radius:5px;transition:color .25s}
     .tab.active{color:#0e0e0e}
-    .h-settings-btn{position:absolute;top:calc(env(safe-area-inset-top) + 28px);right:18px;
-                    background:none;border:none;color:var(--mu);font:400 11px/1 var(--mono);
-                    cursor:pointer;letter-spacing:.06em;padding:4px 0;transition:color .12s}
-    .h-settings-btn:active{color:var(--y)}
+    .h-acts{position:absolute;top:calc(env(safe-area-inset-top) + 28px);right:18px;
+            display:flex;align-items:center;gap:14px}
+    .h-act{background:none;border:none;color:var(--mu);font:400 11px/1 var(--mono);
+           cursor:pointer;letter-spacing:.06em;padding:4px 0;transition:color .12s}
+    .h-act:active{color:var(--y)}
+    .h-act.sync{color:var(--y)}
 
     /* ── Card grid ── */
     .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 18px}
@@ -124,6 +127,31 @@
     .setting-btn.danger:active{border-color:var(--re)}
     .data-warn{font:400 10px/1.6 var(--mono);color:var(--mu);padding:12px 14px;margin-bottom:16px;
                background:var(--s1);border:1px solid var(--bd);border-radius:3px}
+
+    /* ── Todoist sync ── */
+    .f{margin-bottom:14px}
+    .lbl{display:block;font:400 9px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;
+         color:var(--mu);margin-bottom:7px}
+    .f input{width:100%;background:var(--s1);border:1px solid var(--bd);border-radius:3px;
+             color:var(--tx);font:400 14px/1 var(--mono);padding:12px 13px;outline:none;
+             -webkit-appearance:none;appearance:none;transition:border-color .12s}
+    .f input:focus{border-color:var(--y)}
+    .td-status{font:400 10px/1.6 var(--mono);color:var(--mu);letter-spacing:.04em;
+               padding:10px 12px;margin-bottom:8px;border-radius:3px;
+               background:var(--s1);border:1px solid var(--bd);word-break:break-word}
+    .td-status.good{color:var(--gr);border-color:rgba(92,219,125,.3)}
+    .td-status.bad{color:var(--re);border-color:rgba(224,96,96,.3)}
+    .td-status.busy{color:var(--y);border-color:rgba(167,139,250,.3)}
+    .td-acts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+    .td-acts .setting-btn{text-align:center}
+    .td-last{font:400 9px/1 var(--mono);color:var(--mu);letter-spacing:.08em;
+             text-align:center;padding:10px 0 2px}
+    .btn{width:100%;background:var(--y);border:none;border-radius:3px;color:#0e0e0e;
+         font:700 14px/1 var(--head);letter-spacing:.1em;text-transform:uppercase;
+         padding:15px;cursor:pointer;margin-top:6px;transition:opacity .15s}
+    .btn:active{opacity:.82}
+    .setting-btn:disabled,.btn:disabled,.h-act:disabled{opacity:.45;cursor:default}
+    .hidden{display:none!important}
 
     /* ── Travel ── */
     .tv-sec{font:700 10px/1 var(--head);letter-spacing:.15em;text-transform:uppercase;color:var(--y);
@@ -227,7 +255,10 @@
         <button class="tab" data-tab="other" onclick="setTab('other')">other</button>
       </div>
     </div>
-    <button class="h-settings-btn" onclick="go('settings')">settings</button>
+    <div class="h-acts">
+      <button class="h-act sync" data-td-btn="sync" data-td-busy="⋯" onclick="syncTodoist()">sync</button>
+      <button class="h-act" onclick="go('settings')">settings</button>
+    </div>
   </div>
   <div class="grid" id="home-grid"></div>
 </div>
@@ -328,6 +359,46 @@
     <div class="setting-row">
       <span class="setting-lbl">Reset travel list</span>
       <button class="setting-btn danger" onclick="resetTravel()">reset</button>
+    </div>
+
+    <div class="sec">Todoist</div>
+    <div class="data-warn hidden" id="td-file-warn">
+      DO is open as a local file, so the browser will block calls to Todoist.
+      Serve it over http(s) — e.g. GitHub Pages — for sync to work.
+    </div>
+    <div class="f">
+      <label class="lbl">API token</label>
+      <input type="password" id="td-token" placeholder="paste your API token"
+             autocomplete="off" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="f">
+      <label class="lbl">Project</label>
+      <input type="text" id="td-project" placeholder="04 | life" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="f">
+      <label class="lbl">Section</label>
+      <input type="text" id="td-section" placeholder="daily routine" autocapitalize="off" spellcheck="false">
+    </div>
+    <div class="setting-row">
+      <span class="setting-lbl">Close in Todoist on finish</span>
+      <button class="setting-btn" id="td-auto" onclick="toggleAutoPush()">on</button>
+    </div>
+    <div class="setting-row">
+      <span class="setting-lbl">Endpoint</span>
+      <button class="setting-btn" id="td-endpoint" onclick="toggleEndpoint()">direct</button>
+    </div>
+    <div class="td-status" id="td-status">Todoist → Settings → Integrations → Developer → API token</div>
+    <div class="td-acts">
+      <button class="setting-btn" onclick="saveTodoistSettings()">save</button>
+      <button class="setting-btn" data-td-btn="test connection" onclick="testTodoist()">test connection</button>
+    </div>
+    <button class="btn" data-td-btn="sync now" onclick="syncTodoist()">sync now</button>
+    <div class="td-last" id="td-last">never synced</div>
+    <div class="data-warn" style="margin-top:12px">
+      Each daily list is matched to the task of the same name in that section.
+      A recurring task whose due date has already moved past today counts as done —
+      its list is ticked off here, and it is never closed a second time.
+      Sync only ever completes; it never un-ticks a list or reopens a task.
     </div>
   </div>
 </div>
@@ -444,10 +515,12 @@ function saveTravel() { localStorage.setItem(TRAVEL_KEY, JSON.stringify(travel))
 
 function toggle(key, item) {
   if (!state[key]) state[key] = {};
+  const wasDone = routineDone(key);
   state[key][item] = !state[key][item];
   saveState();
   renderChecklist();
   renderHome();
+  if (!wasDone && routineDone(key)) tdAutoPush(key);
 }
 
 function go(id) {
@@ -460,6 +533,7 @@ function go(id) {
   if (id === 'travel-new') renderTravelNew();
   if (id === 'travel-cl') renderTravelCl();
   if (id === 'travel-edit') renderTravelEdit();
+  if (id === 'settings') renderTodoistSettings();
 }
 
 function openRoutine(key) {
@@ -588,6 +662,7 @@ function toggleAll() {
   saveState();
   renderChecklist();
   renderHome();
+  if (!allDone) tdAutoPush(key);
 }
 
 function resetDay() {
@@ -838,13 +913,291 @@ function exportTravelMd() {
   toast('exported ' + filename);
 }
 
+// ─── Todoist sync ─────────────────────────────────────────────────────────────
+// Each daily list is one "every day" task in 04 | life › daily routine. Todoist
+// keeps a recurring task active and only moves its due date on, so a due date
+// past today is the signal it has already been completed for today — that is both
+// how a Todoist completion is read back here and the guard against closing twice.
+// REST v2 was retired 2026-02-10; everything below targets the unified v1 API.
+const TD_KEY    = 'do_todoist_v1';   // outlives the daily state key on purpose
+const TD_DIRECT = 'https://api.todoist.com/api/v1';
+const TD_PROXY  = 'https://todoist-proxy.hp-qrate.workers.dev/api/v1';
+const TD_DEFAULTS = { token:'', project:'04 | life', section:'daily routine',
+                      projectId:null, sectionId:null, lastSync:null,
+                      endpoint:'direct', autoPush:true, closedOn:{} };
+let td = { ...TD_DEFAULTS };
+let tdBusy = false;
+
+function loadTodoist() {
+  try {
+    const raw = localStorage.getItem(TD_KEY);
+    if (raw) td = Object.assign({ ...TD_DEFAULTS }, JSON.parse(raw));
+  } catch { td = { ...TD_DEFAULTS }; }
+  if (!td.closedOn || typeof td.closedOn !== 'object') td.closedOn = {};
+  const today = tdLocalDate();
+  Object.keys(td.closedOn).forEach(k => { if (td.closedOn[k] !== today) delete td.closedOn[k]; });
+}
+function tdPersist() { localStorage.setItem(TD_KEY, JSON.stringify(td)); }
+
+/* Todoist due dates are local calendar days, so "today" here has to be too —
+   the app's own TODAY is UTC and would be a day behind after midnight. */
+function tdLocalDate(d = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+
+function tdFold(s) {
+  return String(s || '').toLowerCase().normalize('NFD')
+    .replace(/[̀-ͯ]/g, '');   // drop accents
+}
+/* "Routine P1", "routine p1" and "ROUTINE-P1" all collapse to the ROUTINES key. */
+function tdSlug(s) { return tdFold(s).replace(/[^a-z0-9]+/g, ''); }
+/* Looser form for project and section names, where words must stay apart:
+   "04 | life" and "04|life" both become "04 life". */
+function tdName(s) { return tdFold(s).replace(/[^a-z0-9]+/g, ' ').trim(); }
+const TD_ROUTINE_BY_SLUG = Object.fromEntries(
+  Object.keys(ROUTINES).flatMap(k => [[tdSlug(k), k], [tdSlug(ROUTINES[k].label), k]]));
+
+function tdBase() { return td.endpoint === 'proxy' ? TD_PROXY : TD_DIRECT; }
+
+async function tdFetch(path, opts = {}) {
+  if (!td.token) throw new Error('no API token saved — add one in settings');
+  let res;
+  try {
+    res = await fetch(tdBase() + path, {
+      ...opts,
+      headers: {
+        'Authorization': 'Bearer ' + td.token,
+        ...(opts.body ? { 'Content-Type': 'application/json' } : {}),
+        ...(opts.headers || {}),
+      },
+    });
+  } catch {
+    throw new Error(location.protocol === 'file:'
+      ? 'blocked by the browser — open DO over http(s), not as a local file'
+      : 'network error — try the other endpoint in settings');
+  }
+  if (res.status === 401 || res.status === 403) throw new Error('token rejected by Todoist (401)');
+  if (res.status === 429) throw new Error('rate limited by Todoist — wait a minute');
+  if (!res.ok) throw new Error(`Todoist error ${res.status}`);
+  const text = await res.text();          // /close answers 204 with no body
+  return text ? JSON.parse(text) : null;
+}
+
+/* v1 paginates some collections as {results,next_cursor} and returns others as a
+   bare array, so unwrap either and follow the cursor when there is one. */
+async function tdGetAll(path, params = {}) {
+  const out = [];
+  let cursor = null;
+  do {
+    const q = new URLSearchParams({ ...params, limit: '200' });
+    if (cursor) q.set('cursor', cursor);
+    const page = await tdFetch(`${path}?${q}`);
+    if (Array.isArray(page)) { out.push(...page); cursor = null; }
+    else { out.push(...(page?.results || [])); cursor = page?.next_cursor || null; }
+  } while (cursor);
+  return out;
+}
+
+/* Resolves "04 | life" / "daily routine" to ids once, then caches them. */
+async function tdResolveTarget(force = false) {
+  if (!force && td.projectId && td.sectionId) return td;
+  const projects = await tdGetAll('/projects');
+  const proj = projects.find(p => tdName(p.name) === tdName(td.project));
+  if (!proj) throw new Error(`project "${td.project}" not found (${projects.length} projects visible)`);
+  const sections = await tdGetAll('/sections', { project_id: proj.id });
+  const sec = sections.find(s => tdName(s.name) === tdName(td.section));
+  if (!sec) {
+    const names = sections.map(s => s.name).join(', ') || 'none';
+    throw new Error(`section "${td.section}" not found in ${proj.name} — has: ${names}`);
+  }
+  td.projectId = proj.id;
+  td.sectionId = sec.id;
+  tdPersist();
+  return td;
+}
+
+/* Map of routine key → the active Todoist task that stands for it. */
+async function tdRoutineTasks(force = false) {
+  const t = await tdResolveTarget(force);
+  const tasks = await tdGetAll('/tasks', { project_id: t.projectId, section_id: t.sectionId });
+  const byRoutine = new Map();
+  tasks.forEach(task => {
+    const key = TD_ROUTINE_BY_SLUG[tdSlug(task.content)];
+    if (key && !byRoutine.has(key)) byRoutine.set(key, task);
+  });
+  return byRoutine;
+}
+
+function tdDueDate(task) {
+  const d = task.due && task.due.date;
+  return d ? String(d).slice(0, 10) : null;   // "2026-08-31" or "2026-08-31T09:00:00"
+}
+/* Already rolled forward = Todoist has it done for today. Dateless tasks can
+   only be pushed, never read back, so they count as not done. */
+function tdRolled(task, today) {
+  const due = tdDueDate(task);
+  return !!due && due > today;
+}
+
+function routineDone(key) {
+  const items = ROUTINES[key]?.items || [];
+  return items.length > 0 && items.every(i => state[key]?.[i]);
+}
+function markRoutineDone(key) {
+  if (!state[key]) state[key] = {};
+  ROUTINES[key].items.forEach(i => { state[key][i] = true; });
+}
+
+async function syncTodoist() {
+  if (tdBusy) return;
+  if (!td.token) { toast('add a Todoist token in settings'); go('settings'); return; }
+  tdBusy = true; renderTdButtons(); tdStatus('syncing…', 'busy');
+  const today = tdLocalDate();
+  try {
+    const byRoutine = await tdRoutineTasks();
+    let pulled = 0, pushed = 0, failed = 0;
+
+    // ── Todoist → DO: a task already due past today was completed over there
+    byRoutine.forEach((task, key) => {
+      if (!tdRolled(task, today) || routineDone(key)) return;
+      markRoutineDone(key);
+      td.closedOn[key] = today;   // done on both sides now — never close it again today
+      pulled++;
+    });
+    if (pulled) { saveState(); renderChecklist(); renderHome(); }
+
+    // ── DO → Todoist: close what is finished here and still due today or earlier
+    for (const [key, task] of byRoutine) {
+      if (!routineDone(key)) continue;
+      if (tdRolled(task, today)) continue;        // already done over there
+      if (td.closedOn[key] === today) continue;   // we already closed it today
+      try {
+        await tdFetch(`/tasks/${task.id}/close`, { method: 'POST' });
+        td.closedOn[key] = today;
+        pushed++;
+      } catch { failed++; }
+    }
+
+    td.lastSync = Date.now();
+    tdPersist();
+    renderTodoistSettings();
+
+    const parts = [];
+    if (pulled) parts.push(`↓ ${pulled} ticked here`);
+    if (pushed) parts.push(`↑ ${pushed} closed`);
+    if (failed) parts.push(`${failed} failed`);
+    if (!byRoutine.size) parts.push('no matching tasks in that section');
+    const msg = parts.length ? parts.join(' · ') : 'already in sync';
+    toast(msg);
+    tdStatus(msg, failed ? 'bad' : 'good');
+  } catch (e) {
+    toast('sync failed');
+    tdStatus(e.message, 'bad');
+  } finally {
+    tdBusy = false; renderTdButtons();
+  }
+}
+
+/* Ticking the last item closes just that one task, so a list finished here does
+   not sit around waiting for the next manual sync. */
+async function tdAutoPush(key) {
+  if (tdBusy || !td.token || !td.autoPush) return;
+  const today = tdLocalDate();
+  if (td.closedOn[key] === today) return;
+  tdBusy = true; renderTdButtons();
+  try {
+    const task = (await tdRoutineTasks()).get(key);
+    if (!task || tdRolled(task, today) || !routineDone(key)) return;
+    await tdFetch(`/tasks/${task.id}/close`, { method: 'POST' });
+    td.closedOn[key] = today;
+    td.lastSync = Date.now();
+    tdPersist();
+    toast('✓ ' + ROUTINES[key].label + ' closed in todoist');
+  } catch (e) {
+    toast('todoist: ' + e.message);
+  } finally {
+    tdBusy = false; renderTdButtons();
+  }
+}
+
+async function testTodoist() {
+  if (tdBusy) return;
+  if (!td.token) { tdStatus('add your API token first', 'bad'); return; }
+  tdBusy = true; renderTdButtons(); tdStatus('checking…', 'busy');
+  try {
+    const byRoutine = await tdRoutineTasks(true);
+    const today = tdLocalDate();
+    if (!byRoutine.size) {
+      tdStatus(`connected to ${td.section}, but no task there matches a list name`, 'bad');
+    } else {
+      const names = [...byRoutine.keys()].map(k => ROUTINES[k].label +
+        (tdRolled(byRoutine.get(k), today) ? ' ✓' : '')).join(', ');
+      tdStatus(`connected — ${byRoutine.size} matched: ${names}`, 'good');
+    }
+  } catch (e) {
+    tdStatus(e.message, 'bad');
+  } finally {
+    tdBusy = false; renderTdButtons();
+  }
+}
+
+function renderTdButtons() {
+  document.querySelectorAll('[data-td-btn]').forEach(b => {
+    b.disabled = tdBusy;
+    b.textContent = tdBusy ? (b.dataset.tdBusy || 'syncing…') : b.dataset.tdBtn;
+  });
+}
+function tdStatus(msg, kind) {
+  const el = document.getElementById('td-status');
+  if (!el) return;
+  el.textContent = msg;
+  el.className = 'td-status' + (kind ? ' ' + kind : '');
+}
+
+function saveTodoistSettings() {
+  const tok  = document.getElementById('td-token').value.trim();
+  const proj = document.getElementById('td-project').value.trim() || TD_DEFAULTS.project;
+  const sec  = document.getElementById('td-section').value.trim() || TD_DEFAULTS.section;
+  // a changed target invalidates the cached ids
+  if (proj !== td.project || sec !== td.section) { td.projectId = null; td.sectionId = null; }
+  td.token = tok; td.project = proj; td.section = sec;
+  tdPersist();
+  renderTodoistSettings();
+  toast(tok ? 'todoist settings saved' : 'todoist token cleared');
+}
+
+function toggleAutoPush() { td.autoPush = !td.autoPush; tdPersist(); renderTodoistSettings(); }
+function toggleEndpoint() {
+  td.endpoint = td.endpoint === 'proxy' ? 'direct' : 'proxy';
+  td.projectId = null; td.sectionId = null;
+  tdPersist();
+  renderTodoistSettings();
+}
+
+function renderTodoistSettings() {
+  const tok = document.getElementById('td-token');
+  if (!tok) return;
+  tok.value = td.token;
+  document.getElementById('td-project').value = td.project;
+  document.getElementById('td-section').value = td.section;
+  document.getElementById('td-auto').textContent = td.autoPush ? 'on' : 'off';
+  document.getElementById('td-endpoint').textContent = td.endpoint === 'proxy' ? 'proxy' : 'direct';
+  document.getElementById('td-last').textContent = td.lastSync
+    ? 'last sync ' + new Date(td.lastSync).toLocaleString('en-GB',
+        { day:'numeric', month:'short', hour:'2-digit', minute:'2-digit' })
+    : 'never synced';
+  document.getElementById('td-file-warn').classList.toggle('hidden', location.protocol !== 'file:');
+}
+
 function toast(msg) {
   const el = document.getElementById('toast');
   el.textContent = msg; el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 1800);
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 1800);
 }
 
 loadState();
+loadTodoist();
 renderHome();
 positionGlider();
 </script>
