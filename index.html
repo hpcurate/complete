@@ -335,11 +335,16 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// Daily lists mirror system_tool_do.md. Glyph prefixes match the app's existing
+// visual language — the words after them are the file's, verbatim.
 const ROUTINES = {
-  routinep1: { label: 'Routine P1', items: ['✚ lamotrigine','✚ ritalin','↑ walk','○ breakfast','⚖ weight','≋ teeth','◡ face','✎ journal entry'] },
-  routinep2: { label: 'Routine P2', items: ['≡ log','◈ prep clothes','○ prep breakfast','◉ prep coffee','▤ plan','≋ brush teeth','◡ face'] },
-  cleanup:   { label: 'Cleanup',    items: ['○ dishes','✿ plants','⟳ vacuum','⊞ tidy up','≈ kamo water','⊡ windows'] },
-  deepclean: { label: 'Deep Clean', items: ['≋ dusting','⟳ vacuum','▭ surfaces','≈ bathroom sink','○ toilet','✕ trash'] },
+  routinep1: { label: 'Routine P1', items: ['≈ shower','≋ teeth','◡ cream','○ breakfast p1','✚ meds','↑ walk kamo','▲ gym'] },
+  routinep2: { label: 'Routine P2', items: ['○ breakfast p2','≡ morning log','≡ log meds','✎ journal entry'] },
+  routinep3: { label: 'Routine P3', items: ['◐ lunch p1','✎ journal entry','✦ feed kamo','≈ fill kamo water','◐ lunch p2','↑ kamo walk'] },
+  routinep4: { label: 'Routine P4', items: ['≡ evening log','✎ journal entry','▤ plan blocks','▦ schedule','○ cleanup / dishes'] },
+  cooldown:  { label: 'Cooldown',   items: ['▭ bed out','≈ fill water','≋ teeth','◇ tongue','◡ cream'] },
+  cleanup:   { label: 'Cleanup',    items: ['○ dishes','✿ plants','⟳ vacuum','⊞ tidy up','✕ trash/recycle'] },
+  deepclean: { label: 'Deep Clean', items: ['≋ dusting','⟳ vacuum','▧ mop','▭ surfaces','≈ bathroom sink','○ toilet','✕ trash'] },
 };
 
 // Travel: master categories. Every item is a counter that starts at 1.
@@ -362,7 +367,7 @@ const SK = 'do_' + TODAY;
 
 // Which routines live under each home tab. Travel is shown under "other".
 const TAB_ROUTINES = {
-  daily: ['routinep1', 'routinep2', 'cleanup'],
+  daily: ['routinep1', 'routinep2', 'routinep3', 'routinep4', 'cooldown', 'cleanup'],
   other: ['deepclean'],
 };
 
@@ -374,6 +379,11 @@ let currentList = null;   // id of the open checklist
 let editSection = null;
 let newCats = new Set();  // categories selected on the new-checklist screen
 
+// Derived from ROUTINES so adding a list never needs this kept in step.
+function blankState() {
+  return Object.fromEntries(Object.keys(ROUTINES).map(k => [k, {}]));
+}
+
 function loadState() {
   try {
     const raw = localStorage.getItem(SK);
@@ -381,9 +391,9 @@ function loadState() {
     else {
       Object.keys(localStorage).filter(k => k.startsWith('do_') && k !== SK)
         .forEach(k => localStorage.removeItem(k));
-      state = { routinep1:{}, routinep2:{}, cleanup:{}, deepclean:{} };
+      state = blankState();
     }
-  } catch { state = { routinep1:{}, routinep2:{}, cleanup:{}, deepclean:{} }; }
+  } catch { state = blankState(); }
   loadTravel();
 }
 
@@ -582,7 +592,7 @@ function toggleAll() {
 
 function resetDay() {
   if (!confirm('Reset all items for today?')) return;
-  state = { routinep1:{}, routinep2:{}, cleanup:{}, deepclean:{} };
+  state = blankState();
   saveState();
   go('home');
 }
